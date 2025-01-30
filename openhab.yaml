@@ -1,0 +1,184 @@
+#    Copyright 2025 Pierre Gaufillet
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
+zabbix_export:
+  version: '6.0'
+  date: '2025-02-02T09:41:33Z'
+  groups:
+    -
+      uuid: be9ead16d4224e4b8e105c09d974f668
+      name: Devices
+    -
+      uuid: eb904d96d8ee4f9d83bda611956e865d
+      name: 'Home Automation'
+  templates:
+    -
+      uuid: 409633555102453d97034c21f2a06c39
+      template: 'OpenHAB Things'
+      name: 'OpenHAB Things'
+      description: |
+        Discover and monitor OpenHAB things and bridges.
+        The following macros shall be provided:
+        * {$OPENHAB.REST.BASE_URL}: typically something like "http://openhab:8443" 
+        * {$OPENHAB.AUTH.TOKEN}: an API authentication token configured in OpenHAB. See https://www.openhab.org/docs/configuration/apitokens.html.
+        
+        This template is hosted at https://github.com/pgaufillet/zabbix-templates.
+      groups:
+        -
+          name: Devices
+        -
+          name: 'Home Automation'
+      discovery_rules:
+        -
+          uuid: 1eb1f8c0b3d94513908e9b4a5ef4cca5
+          name: Bridges
+          type: HTTP_AGENT
+          key: openhab.bridge.discovery
+          delay: 1d
+          filter:
+            conditions:
+              -
+                macro: '{#UID}'
+                value: '^[\w-]+:[\w-]+:[\w-]+$'
+                formulaid: A
+          item_prototypes:
+            -
+              uuid: 670482dbf76b4e03a4da373d8df3e8bb
+              name: 'Bridge {#LABEL} status'
+              type: HTTP_AGENT
+              key: 'openhab.bridge.status[{#UID}]'
+              delay: 10m
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.status
+              url: '{$OPENHAB.REST.BASE_URL}/rest/things/{#UID}/status'
+              headers:
+                -
+                  name: Authorization
+                  value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
+                -
+                  name: Accept
+                  value: application/json
+              trigger_prototypes:
+                -
+                  uuid: e7630414b466406b9419510a7a595e3f
+                  expression: 'last(/OpenHAB Things/openhab.bridge.status[{#UID}])<>"ONLINE"'
+                  name: 'Bridge {#LABEL} is not online'
+                  priority: WARNING
+          url: '{$OPENHAB.REST.BASE_URL}/rest/things'
+          query_fields:
+            -
+              name: summary
+              value: 'true'
+            -
+              name: staticDataOnly
+              value: 'false'
+          headers:
+            -
+              name: Authorization
+              value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
+            -
+              name: Accept
+              value: application/json
+          lld_macro_paths:
+            -
+              lld_macro: '{#LABEL}'
+              path: $.label
+            -
+              lld_macro: '{#UID}'
+              path: $.UID
+        -
+          uuid: eb3d4cd4f55a4e80bf629a38a7dad564
+          name: Things
+          type: HTTP_AGENT
+          key: openhab.thing.discovery
+          delay: 1d
+          filter:
+            conditions:
+              -
+                macro: '{#UID}'
+                value: '^[\w-]+:[\w-]+:[\w-]+:[\w-]+$'
+                formulaid: A
+          item_prototypes:
+            -
+              uuid: 49ed7e1ed1c84ec593544765d74e4b78
+              name: 'Thing {#LABEL} status'
+              type: HTTP_AGENT
+              key: 'openhab.thing.status[{#UID}]'
+              delay: 10m
+              trends: '0'
+              value_type: TEXT
+              preprocessing:
+                -
+                  type: JSONPATH
+                  parameters:
+                    - $.status
+              url: '{$OPENHAB.REST.BASE_URL}/rest/things/{#UID}/status'
+              headers:
+                -
+                  name: Authorization
+                  value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
+                -
+                  name: Accept
+                  value: application/json
+              trigger_prototypes:
+                -
+                  uuid: 44720a2aaf2c4945bf5ceb7d6c2c72f8
+                  expression: 'last(/OpenHAB Things/openhab.thing.status[{#UID}])<>"ONLINE"'
+                  name: 'Thing {#LABEL} is not online'
+                  priority: WARNING
+          url: '{$OPENHAB.REST.BASE_URL}/rest/things'
+          query_fields:
+            -
+              name: summary
+              value: 'true'
+            -
+              name: staticDataOnly
+              value: 'false'
+          headers:
+            -
+              name: Authorization
+              value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
+            -
+              name: Accept
+              value: application/json
+          lld_macro_paths:
+            -
+              lld_macro: '{#BRIDGE_UID}'
+              path: $.bridgeUID
+            -
+              lld_macro: '{#LABEL}'
+              path: $.label
+            -
+              lld_macro: '{#UID}'
+              path: $.UID
+      tags:
+        -
+          tag: class
+          value: application
+        -
+          tag: origin
+          value: third-party
+        -
+          tag: target
+          value: openhab
+      macros:
+        -
+          macro: '{$OPENHAB.AUTH.TOKEN}'
+        -
+          macro: '{$OPENHAB.REST.BASE_URL}'
