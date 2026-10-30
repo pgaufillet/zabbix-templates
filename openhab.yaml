@@ -180,5 +180,6 @@ zabbix_export:
       macros:
         -
           macro: '{$OPENHAB.AUTH.TOKEN}'
+          type: SECRET_TEXT
         -
           macro: '{$OPENHAB.REST.BASE_URL}'
