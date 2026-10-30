@@ -1,4 +1,4 @@
-#    Copyright 2025 Pierre Gaufillet
+#    Copyright 2025-2026 Pierre Gaufillet
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -13,18 +13,14 @@
 #   limitations under the License.
 
 zabbix_export:
-  version: '6.0'
-  date: '2025-02-02T09:41:33Z'
-  groups:
-    -
-      uuid: be9ead16d4224e4b8e105c09d974f668
+  version: '7.0'
+  template_groups:
+    - uuid: be9ead16d4224e4b8e105c09d974f668
       name: Devices
-    -
-      uuid: eb904d96d8ee4f9d83bda611956e865d
+    - uuid: eb904d96d8ee4f9d83bda611956e865d
       name: 'Home Automation'
   templates:
-    -
-      uuid: 409633555102453d97034c21f2a06c39
+    - uuid: 409633555102453d97034c21f2a06c39
       template: 'OpenHAB Things'
       name: 'OpenHAB Things'
       description: |
@@ -35,151 +31,127 @@ zabbix_export:
         
         This template is hosted at https://github.com/pgaufillet/zabbix-templates.
       groups:
-        -
-          name: Devices
-        -
-          name: 'Home Automation'
+        - name: Devices
+        - name: 'Home Automation'
       discovery_rules:
-        -
-          uuid: 1eb1f8c0b3d94513908e9b4a5ef4cca5
+        - uuid: 1eb1f8c0b3d94513908e9b4a5ef4cca5
           name: Bridges
           type: HTTP_AGENT
           key: openhab.bridge.discovery
           delay: 1d
           filter:
             conditions:
-              -
-                macro: '{#UID}'
+              - macro: '{#UID}'
                 value: '^[\w-]+:[\w-]+:[\w-]+$'
                 formulaid: A
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
           item_prototypes:
-            -
-              uuid: 670482dbf76b4e03a4da373d8df3e8bb
+            - uuid: 670482dbf76b4e03a4da373d8df3e8bb
               name: 'Bridge {#LABEL} status'
               type: HTTP_AGENT
               key: 'openhab.bridge.status[{#UID}]'
               delay: 10m
-              trends: '0'
+              history: 90d
               value_type: TEXT
+              trends: '0'
               preprocessing:
-                -
-                  type: JSONPATH
+                - type: JSONPATH
                   parameters:
                     - $.status
+              timeout: 3s
               url: '{$OPENHAB.REST.BASE_URL}/rest/things/{#UID}/status'
               headers:
-                -
-                  name: Authorization
+                - name: Authorization
                   value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
-                -
-                  name: Accept
+                - name: Accept
                   value: application/json
               trigger_prototypes:
-                -
-                  uuid: e7630414b466406b9419510a7a595e3f
-                  expression: 'last(/OpenHAB Things/openhab.bridge.status[{#UID}])<>"ONLINE"'
+                - uuid: e7630414b466406b9419510a7a595e3f
+                  expression: 'find(/OpenHAB Things/openhab.bridge.status[{#UID}],30m,,"ONLINE")=0'
                   name: 'Bridge {#LABEL} is not online'
                   priority: WARNING
+          timeout: 3s
           url: '{$OPENHAB.REST.BASE_URL}/rest/things'
           query_fields:
-            -
-              name: summary
+            - name: summary
               value: 'true'
-            -
-              name: staticDataOnly
+            - name: staticDataOnly
               value: 'false'
           headers:
-            -
-              name: Authorization
+            - name: Authorization
               value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
-            -
-              name: Accept
+            - name: Accept
               value: application/json
           lld_macro_paths:
-            -
-              lld_macro: '{#LABEL}'
+            - lld_macro: '{#LABEL}'
               path: $.label
-            -
-              lld_macro: '{#UID}'
+            - lld_macro: '{#UID}'
               path: $.UID
-        -
-          uuid: eb3d4cd4f55a4e80bf629a38a7dad564
+        - uuid: eb3d4cd4f55a4e80bf629a38a7dad564
           name: Things
           type: HTTP_AGENT
           key: openhab.thing.discovery
           delay: 1d
           filter:
             conditions:
-              -
-                macro: '{#UID}'
+              - macro: '{#UID}'
                 value: '^[\w-]+:[\w-]+:[\w-]+:[\w-]+$'
                 formulaid: A
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
           item_prototypes:
-            -
-              uuid: 49ed7e1ed1c84ec593544765d74e4b78
+            - uuid: 49ed7e1ed1c84ec593544765d74e4b78
               name: 'Thing {#LABEL} status'
               type: HTTP_AGENT
               key: 'openhab.thing.status[{#UID}]'
               delay: 10m
-              trends: '0'
+              history: 90d
               value_type: TEXT
+              trends: '0'
               preprocessing:
-                -
-                  type: JSONPATH
+                - type: JSONPATH
                   parameters:
                     - $.status
+              timeout: 3s
               url: '{$OPENHAB.REST.BASE_URL}/rest/things/{#UID}/status'
               headers:
-                -
-                  name: Authorization
+                - name: Authorization
                   value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
-                -
-                  name: Accept
+                - name: Accept
                   value: application/json
               trigger_prototypes:
-                -
-                  uuid: 44720a2aaf2c4945bf5ceb7d6c2c72f8
-                  expression: 'last(/OpenHAB Things/openhab.thing.status[{#UID}])<>"ONLINE"'
+                - uuid: 44720a2aaf2c4945bf5ceb7d6c2c72f8
+                  expression: 'find(/OpenHAB Things/openhab.thing.status[{#UID}],30m,,"ONLINE")=0'
                   name: 'Thing {#LABEL} is not online'
                   priority: WARNING
+          timeout: 3s
           url: '{$OPENHAB.REST.BASE_URL}/rest/things'
           query_fields:
-            -
-              name: summary
+            - name: summary
               value: 'true'
-            -
-              name: staticDataOnly
+            - name: staticDataOnly
               value: 'false'
           headers:
-            -
-              name: Authorization
+            - name: Authorization
               value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
-            -
-              name: Accept
+            - name: Accept
               value: application/json
           lld_macro_paths:
-            -
-              lld_macro: '{#BRIDGE_UID}'
+            - lld_macro: '{#BRIDGE_UID}'
               path: $.bridgeUID
-            -
-              lld_macro: '{#LABEL}'
+            - lld_macro: '{#LABEL}'
               path: $.label
-            -
-              lld_macro: '{#UID}'
+            - lld_macro: '{#UID}'
               path: $.UID
       tags:
-        -
-          tag: class
+        - tag: class
           value: application
-        -
-          tag: origin
+        - tag: origin
           value: third-party
-        -
-          tag: target
+        - tag: target
           value: openhab
       macros:
-        -
-          macro: '{$OPENHAB.AUTH.TOKEN}'
+        - macro: '{$OPENHAB.AUTH.TOKEN}'
           type: SECRET_TEXT
-        -
-          macro: '{$OPENHAB.REST.BASE_URL}'
+        - macro: '{$OPENHAB.REST.BASE_URL}'
