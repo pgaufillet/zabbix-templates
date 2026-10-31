@@ -30,6 +30,9 @@ zabbix_export:
         * {$OPENHAB.AUTH.TOKEN}: an API authentication token configured in OpenHAB. See https://www.openhab.org/docs/configuration/apitokens.html.
         
         This template is hosted at https://github.com/pgaufillet/zabbix-templates.
+      vendor:
+        name: Bergamote
+        version: 7.0-1
       groups:
         - name: Devices
         - name: 'Home Automation'
@@ -66,11 +69,19 @@ zabbix_export:
                   value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
                 - name: Accept
                   value: application/json
+              tags:
+                - tag: bridge
+                  value: '{#LABEL}'
+                - tag: component
+                  value: status
               trigger_prototypes:
                 - uuid: e7630414b466406b9419510a7a595e3f
                   expression: 'find(/OpenHAB Things/openhab.bridge.status[{#UID}],30m,,"ONLINE")=0'
                   name: 'Bridge {#LABEL} is not online'
                   priority: WARNING
+                  tags:
+                    - tag: scope
+                      value: availability
           timeout: 3s
           url: '{$OPENHAB.REST.BASE_URL}/rest/things'
           query_fields:
@@ -120,11 +131,19 @@ zabbix_export:
                   value: 'Bearer {$OPENHAB.AUTH.TOKEN}'
                 - name: Accept
                   value: application/json
+              tags:
+                - tag: component
+                  value: status
+                - tag: thing
+                  value: '{#LABEL}'
               trigger_prototypes:
                 - uuid: 44720a2aaf2c4945bf5ceb7d6c2c72f8
                   expression: 'find(/OpenHAB Things/openhab.thing.status[{#UID}],30m,,"ONLINE")=0'
                   name: 'Thing {#LABEL} is not online'
                   priority: WARNING
+                  tags:
+                    - tag: scope
+                      value: availability
           timeout: 3s
           url: '{$OPENHAB.REST.BASE_URL}/rest/things'
           query_fields:
@@ -147,8 +166,6 @@ zabbix_export:
       tags:
         - tag: class
           value: application
-        - tag: origin
-          value: third-party
         - tag: target
           value: openhab
       macros:
